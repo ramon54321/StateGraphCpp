@@ -14,7 +14,7 @@ namespace state_management
     };
 
     template <typename TimeType, typename ValueType>
-    class Graph
+    class StateGraph
     {
     private:
         std::map<TimeType, ValueType> values;
@@ -23,7 +23,7 @@ namespace state_management
         /*
         Constructor checks constraints for graph key and value.
         */
-        Graph()
+        StateGraph()
         {
             static_assert(std::is_integral<TimeType>::value 
                     || std::is_floating_point<TimeType>::value
