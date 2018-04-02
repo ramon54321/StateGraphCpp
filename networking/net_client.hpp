@@ -10,21 +10,29 @@
 #include <unordered_map>
 
 using tcp = boost::asio::ip::tcp;
-namespace websocket = boost::beast::websocket;
 
 //------------------------------------------------------------------------------
 
-class NetClient
+namespace networking
 {
-private:
-    websocket::stream<tcp::socket>* websocket;
-    std::thread* client_thread;
+    class NetClientManager;
 
-public:
-    NetClient();
-    NetClient (tcp::socket& socket);
-    ~NetClient();
+    class NetClient
+    {
+    private:
+        NetClientManager* net_client_manager;
+        unsigned int client_id;
+        boost::beast::websocket::stream<tcp::socket>* websocket;
+        std::thread* client_thread;
 
-    // -- Listen for message from this client BLOCKING
-    void listen();
-};
+    public:
+        NetClient();
+        NetClient (NetClientManager* net_client_manager, unsigned int client_id,
+            tcp::socket& socket);
+        ~NetClient();
+
+        // -- Listen for message from this client BLOCKING
+        void listen();
+        void send(std::string message);
+    };
+}
