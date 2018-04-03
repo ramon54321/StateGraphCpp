@@ -1,14 +1,30 @@
 #include "net_client_manager.hpp"
 
 using tcp = boost::asio::ip::tcp;
+#include <functional>
 
 //------------------------------------------------------------------------------
 
 namespace networking
 {
-    NetClientManager::NetClientManager()
+    NetClientManager::NetClientManager(
+        // -- Link callback functions
+        std::function<void(unsigned int, std::string)> on_message_callback,
+        std::function<void(unsigned int)> on_connect_callback,
+        std::function<void(unsigned int)> on_disconnect_callback)
+        : on_message_callback(on_message_callback),
+          on_connect_callback(on_connect_callback),
+          on_disconnect_callback(on_disconnect_callback)
+
     {
+        // -- Spin up new thread to listen for new connections
         client_manager_thread = new std::thread(&NetClientManager::listen, this);
+    }
+
+    NetClientManager::~NetClientManager()
+    {
+        // -- Delete thread
+        delete client_manager_thread;
     }
 
     void NetClientManager::listen()
@@ -32,8 +48,8 @@ namespace networking
                     // -- Block until we get a connection
                     acceptor.accept(socket);
 
-                    // -- Add client to map
-                    clients[client_id] = NetClient(this, client_id, socket);
+                    // -- Add client to map passing reference to this manager
+                    clients[client_id] = new NetClient(*this, client_id, socket);
 
                     // -- Increment next client_id
                     client_id++;
@@ -47,11 +63,21 @@ namespace networking
 
     void NetClientManager::send_message(unsigned int client_id, std::string message)
     {
-        clients[client_id].send(message);
+        clients[client_id]->send_message(message);
     }
 
     void NetClientManager::on_message(unsigned int client_id, std::string message)
     {
-        std::cout << std::to_string(client_id) << ": " << message << std::endl;
+        on_message_callback(client_id, message);
+    }
+
+    void NetClientManager::on_connect(unsigned int client_id)
+    {
+        on_connect_callback(client_id);
+    }
+
+    void NetClientManager::on_disconnect(unsigned int client_id)
+    {
+        on_disconnect_callback(client_id);
     }
 }

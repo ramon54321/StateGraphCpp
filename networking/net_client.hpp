@@ -20,19 +20,29 @@ namespace networking
     class NetClient
     {
     private:
-        NetClientManager* net_client_manager;
+        // -- Manager of this client
+        NetClientManager& net_client_manager;
+
+        // -- Id in manager refering to this client
         unsigned int client_id;
+
+        // -- Websocket to use to communicate with this client
         boost::beast::websocket::stream<tcp::socket>* websocket;
-        std::thread* client_thread;
+
+        // -- Thread listening for messages from this client
+        std::thread client_thread;
 
     public:
-        NetClient();
-        NetClient (NetClientManager* net_client_manager, unsigned int client_id,
-            tcp::socket& socket);
+        NetClient (
+            NetClientManager& net_client_manager, unsigned int client_id,
+            tcp::socket& socket
+        );
         ~NetClient();
 
         // -- Listen for message from this client BLOCKING
         void listen();
-        void send(std::string message);
+
+        // -- Send message to client
+        void send_message(std::string message);
     };
 }
